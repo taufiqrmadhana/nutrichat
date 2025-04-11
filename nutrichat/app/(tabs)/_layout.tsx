@@ -34,9 +34,9 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="todo"
+          name="ChatRoom"
           options={{
-            title: 'To do',
+            title: 'Chat Room',
             tabBarIcon: ({ color }) => <IconSymbol size={26} name="arrow.uturn.down" color={color} />,
           }}
         />
@@ -55,9 +55,9 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="evaluate"
+          name="challenge"
           options={{
-            title: 'Evaluate',
+            title: 'Challenge',
             tabBarIcon: ({ color }) => <IconSymbol size={26} name="rosette" color={color} />,
           }}
         />
