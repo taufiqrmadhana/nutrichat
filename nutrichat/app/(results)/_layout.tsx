@@ -6,7 +6,7 @@ export default function Layout() {
   return (
     <AssessmentProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="results" />
       </Stack>
     </AssessmentProvider>
   );

@@ -36,7 +36,7 @@ export default function ResultsScreen() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={styles.doneButton}
-          onPress={() => router.push('/')}
+          onPress={() => router.push('/(tabs)')}
         >
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
