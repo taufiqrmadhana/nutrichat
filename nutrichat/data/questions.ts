@@ -1,27 +1,36 @@
-// questions.ts
 export const assessmentQuestions = [
     {
       id: "age",
       title: "Physical Health Assessment",
       question: "What is your age?",
       type: "numeric",
+      placeholder: "e.g. 25",
     },
     {
       id: "height",
       title: "Physical Health Assessment",
-      question: "What is your height?",
+      question: "What is your height in cm?",
       type: "numeric",
+      placeholder: "e.g. 170",
     },
     {
       id: "currentWeight",
       title: "Physical Health Assessment",
-      question: "What is your current weight?",
+      question: "What is your current weight in kg?",
       type: "numeric",
+      placeholder: "e.g. 65",
+    },
+    {
+      id: "targetWeight",
+      title: "Fitness Goal",
+      question: "What is your target weight in kg?",
+      type: "numeric",
+      placeholder: "e.g. 60",
     },
     {
       id: "activityLevel",
-      title: "Physical Health Assessment",
-      question: "What is your activity level?",
+      title: "Physical Activity",
+      question: "What is your daily activity level?",
       type: "options",
       options: [
         { label: "Sedentary", value: "sedentary" },
@@ -32,9 +41,33 @@ export const assessmentQuestions = [
       ],
     },
     {
+      id: "dailyExercise",
+      title: "Exercise Routine",
+      question: "What kind of exercises do you usually do?",
+      type: "text",
+      placeholder: "e.g. Jogging 3x/week, gym, yoga",
+      multiInput: true,
+    },
+    {
+      id: "foodAllergies",
+      title: "Nutrition",
+      question: "Do you have any food allergies?",
+      type: "text",
+      placeholder: "e.g. Peanuts, dairy, gluten",
+      multiInput: true, // custom flag (lo bisa handle di UI kalau support multi)
+    },
+    {
+      id: "medicalRecords",
+      title: "Medical History",
+      question: "Do you have any medical conditions?",
+      type: "text",
+      placeholder: "e.g. Asthma, diabetes, high blood pressure",
+      multiInput: true,
+    },
+    {
       id: "goals",
-      title: "Physical Health Assessment",
-      question: "What is your fitness goal?",
+      title: "Fitness Goal",
+      question: "What is your overall fitness goal?",
       type: "options",
       options: [
         { label: "Lose Weight", value: "lose_weight" },
@@ -43,5 +76,5 @@ export const assessmentQuestions = [
         { label: "Build Muscle", value: "build_muscle" },
       ],
     },
-    // Add more questions as needed
   ];
+  

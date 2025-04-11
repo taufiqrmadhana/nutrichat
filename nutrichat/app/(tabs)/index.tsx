@@ -1,80 +1,123 @@
+import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function HomePage() {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
+  const [profileName, setProfileName] = useState("Timotius Vivaldi Gobo.");
+  const [profilePic, setProfilePic] = useState(require("@/assets/image2.png"));
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Nutrichat</Text>
         <TouchableOpacity>
-          <View style={styles.menuButton}>
-            <Text style={styles.menuText}>≡</Text>
-          </View>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.profileSection}>
-        <Image source={{ uri: "https://via.placeholder.com/60" }} style={styles.profileImage} />
-        <View style={styles.profileTextContainer}>
-          <Text style={styles.profileName}>Timotius Vivaldi G.</Text>
-          <Text style={styles.profileLevel}>Lvl 1</Text>
-          <View style={styles.progressBarContainer}>
-            <LinearGradient colors={["#ff7300", "#ffb300"]} style={styles.progressBar} />
-            <Text style={styles.progressText}>200/500</Text>
+      
+      <View style={styles.contentContainer}>
+        <View style={styles.profileSection}>
+          <Image source={profilePic} style={styles.profileImage} />
+          <View style={styles.profileTextContainer}>
+            <Text style={styles.profileName}>{profileName}</Text>
+            <Text style={styles.healthOverview}>Health Overview</Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.evaluationCard}>
-        <Text style={styles.evaluationTitle}>Evaluasi Harian</Text>
-        <Text style={styles.evaluationText}>
-          Minggu ini kamu mengonsumsi kalori 10% lebih banyak daripada minggu lalu! Kamu hampir memenuhi target.
-        </Text>
-
-        <View style={styles.evaluationStats}>
-          <View>
-            <Text style={styles.evaluationNumber}>2081 kkal</Text>
-            <Text style={styles.evaluationLabel}>Total Kalori</Text>
-          </View>
-          <View>
-            <Text style={styles.evaluationNumber}>68%</Text>
-            <Text style={styles.evaluationLabel}>Persentase RDI</Text>
-          </View>
+        <Text style={styles.today}>Today</Text>
+        <View style={styles.circleRow}>
+          {[...Array(7)].map((_, i) => (
+            <View key={i} style={[styles.circle, i < 5 ? styles.activeCircle : {}]} />
+          ))}
         </View>
-
-        <View style={styles.nutritionBreakdown}>
-          <View style={styles.nutritionItem}>
-            <View style={[styles.nutritionCircle, { backgroundColor: "#6b46c1" }]}> 
-              <Text style={styles.nutritionText}>85%</Text>
-            </View>
-            <Text style={styles.nutritionLabel}>Protein</Text>
-          </View>
-          <View style={styles.nutritionItem}>
-            <View style={[styles.nutritionCircle, { backgroundColor: "#e53e3e" }]}> 
-              <Text style={styles.nutritionText}>62%</Text>
-            </View>
-            <Text style={styles.nutritionLabel}>Karbohidrat</Text>
-          </View>
-          <View style={styles.nutritionItem}>
-            <View style={[styles.nutritionCircle, { backgroundColor: "#d69e2e" }]}> 
-              <Text style={styles.nutritionText}>45%</Text>
-            </View>
-            <Text style={styles.nutritionLabel}>Lemak</Text>
-          </View>
+        <View style={styles.logRow}>
+          <Image
+                source={require('@/assets/Vector(4).png')}
+                style={{ width: 24, height: 24, marginRight: 8 }}
+              />
+          <Text style={styles.foodstreak}>Food logging streak of 5 days</Text>
         </View>
-      </View>
-
-      <View style={styles.mealButtons}>
-        {["Breakfast", "Lunch", "Dinner", "Snack"].map((meal) => (
-          <TouchableOpacity key={meal} style={styles.mealButton}>
-            <Text style={styles.mealButtonText}>Add {meal}</Text>
+        <View style={styles.mealButtons}>
+          <TouchableOpacity style={styles.mealButton}>
+            <View style={styles.mealButtonContent}>
+              <View style={styles.mealLabelContainer}>
+                <Image
+                  source={require('@/assets/breakfast.png')}
+                  style={styles.mealIcon}
+                />
+                <Text style={styles.mealButtonText}>Add Breakfast</Text>
+              </View>
+              <Image
+                source={require('@/assets/ic_baseline-plus.png')}
+                style={styles.plusIcon}
+              />
+            </View>
           </TouchableOpacity>
-        ))}
+          <TouchableOpacity style={styles.mealButton}>
+            <View style={styles.mealButtonContent}>
+              <View style={styles.mealLabelContainer}>
+                <Image
+                  source={require('@/assets/lunch.png')}
+                  style={styles.mealIcon}
+                />
+                <Text style={styles.mealButtonText}>Add Lunch</Text>
+              </View>
+              <Image
+                source={require('@/assets/ic_baseline-plus.png')}
+                style={styles.plusIcon}
+              />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.mealButton}>
+            <View style={styles.mealButtonContent}>
+              <View style={styles.mealLabelContainer}>
+                <Image
+                  source={require('@/assets/dinner.png')}
+                  style={styles.mealIcon}
+                />
+                <Text style={styles.mealButtonText}>Add Dinner</Text>
+              </View>
+              <Image
+                source={require('@/assets/ic_baseline-plus.png')}
+                style={styles.plusIcon}
+              />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.mealButton}>
+            <View style={styles.mealButtonContent}>
+              <View style={styles.mealLabelContainer}>
+                <Image
+                  source={require('@/assets/ic_round-mode-night.png')}
+                  style={styles.mealIcon}
+                />
+                <Text style={styles.mealButtonText}>Add Snack</Text>
+              </View>
+              <Image
+                source={require('@/assets/ic_baseline-plus.png')}
+                style={styles.plusIcon}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.dashboardTitle}>Dashboard</Text>
+        <View style={styles.chartRow}>
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Calories</Text>
+            <Image
+              source={require('@/assets/chart5fix.png')}
+              style={{ width: 150, height: 150}}
+            />
+          </View>
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Nutrition</Text>
+            <Image
+              source={require('@/assets/chart7fix.png')}
+              style={{ width: 150, height: 150 }}
+            />
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -84,13 +127,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
+  },
+  contentContainer: {
     paddingHorizontal: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 0,
+    backgroundColor: "grey",
+    padding: 8,
+    paddingTop: 50,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
   },
   title: {
     color: "#FFA500",
@@ -125,78 +176,30 @@ const styles = StyleSheet.create({
   profileName: {
     color: "white",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "800",
   },
-  profileLevel: {
-    color: "gray",
-  },
-  progressBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  progressBar: {
-    height: 8,
-    width: 112,
-    borderRadius: 4,
-  },
-  progressText: {
-    marginLeft: 8,
-    color: "gray",
-    fontSize: 12,
-  },
-  evaluationCard: {
-    marginTop: 24,
-    backgroundColor: "#1c1c1c",
-    padding: 16,
-    borderRadius: 16,
-  },
-  evaluationTitle: {
+  healthOverview: {
     color: "white",
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 28,
+    fontWeight: "400",
   },
-  evaluationText: {
-    color: "gray",
-    fontSize: 14,
-    marginTop: 4,
-  },
-  evaluationStats: {
+  circleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
+    marginTop: 8,
+    paddingHorizontal: 8,
   },
-  evaluationNumber: {
-    color: "#FFA500",
-    fontSize: 24,
-    fontWeight: "bold",
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "white",
+    marginHorizontal: 4,
   },
-  evaluationLabel: {
-    color: "gray",
-    fontSize: 12,
-  },
-  nutritionBreakdown: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
-  },
-  nutritionItem: {
-    alignItems: "center",
-  },
-  nutritionCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nutritionText: {
+  foodstreak: {
     color: "white",
-  },
-  nutritionLabel: {
-    color: "gray",
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 16,
+    fontWeight: "600",
   },
   mealButtons: {
     marginTop: 24,
@@ -207,8 +210,68 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 12,
   },
+  mealButtonContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  mealLabelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  mealIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  plusIcon: {
+    width: 24,
+    height: 24,
+  },
   mealButtonText: {
     color: "white",
     fontSize: 16,
+  },
+  dashboardTitle: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "600",
+    padding: 5,
+  },
+  chartRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  chartCard: {
+    flex: 1,
+    backgroundColor: "#1c1c1c",
+    borderRadius: 32,
+    padding: 16,
+    marginHorizontal: 4,
+    alignItems: "center",
+  },
+  chartTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  logRow: {
+    flexDirection: "row",
+    gap: 5,
+    alignItems: "center",
+    paddingTop: 15,
+    marginHorizontal: 13
+  },
+  today: {
+    paddingTop: 20,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white"
+  },
+  activeCircle: {
+    backgroundColor: "#4CAF50",
   },
 });

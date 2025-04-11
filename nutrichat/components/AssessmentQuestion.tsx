@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,9 +22,15 @@ interface AssessmentQuestionProps {
   isNumericInput?: boolean;
   numericValue?: string;
   setNumericValue?: (value: string) => void;
+  isTextInput?: boolean;  // Added for regular text input
+  textValue?: string;     // Added for regular text input
+  setTextValue?: (value: string) => void;  // Added for regular text input
+  isMultiTextInput?: boolean;
+  multiTextValues?: string[];
+  setMultiTextValues?: (values: string[]) => void;
   placeholder?: string;
   showBottomTabs?: boolean;
-  onNext: (value?: string | number) => void;
+  onNext: (value?: string | number | string[]) => void;
   onBack: () => void;
   currentStep: number;
   totalSteps: number;
@@ -36,6 +43,12 @@ export default function AssessmentQuestion({
   isNumericInput = false,
   numericValue = "",
   setNumericValue,
+  isTextInput = false,
+  textValue = "",
+  setTextValue,
+  isMultiTextInput = false,
+  multiTextValues = [],
+  setMultiTextValues,
   placeholder = "Enter value",
   showBottomTabs = true,
   onNext,
@@ -43,6 +56,15 @@ export default function AssessmentQuestion({
   currentStep,
   totalSteps,
 }: AssessmentQuestionProps) {
+  const [multiInputTemp, setMultiInputTemp] = React.useState("");
+
+  const handleAddMultiInput = () => {
+    if (multiInputTemp.trim() && setMultiTextValues) {
+      setMultiTextValues([...multiTextValues, multiInputTemp.trim()]);
+      setMultiInputTemp("");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -54,7 +76,7 @@ export default function AssessmentQuestion({
         </View>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content}>
         <Text style={styles.question}>{question}</Text>
 
         {isNumericInput ? (
@@ -67,6 +89,38 @@ export default function AssessmentQuestion({
               placeholder={placeholder}
               placeholderTextColor="#777"
             />
+          </View>
+        ) : isTextInput ? (
+          <View style={styles.numericInputContainer}>
+            <TextInput
+              style={styles.numericInput}
+              value={textValue}
+              onChangeText={setTextValue}
+              keyboardType="default"
+              placeholder={placeholder}
+              placeholderTextColor="#777"
+            />
+          </View>
+        ) : isMultiTextInput ? (
+          <View>
+            <View style={styles.multiInputRow}>
+              <TextInput
+                style={[styles.numericInput, { flex: 1 }]}
+                value={multiInputTemp}
+                onChangeText={setMultiInputTemp}
+                placeholder={placeholder}
+                placeholderTextColor="#777"
+              />
+              <TouchableOpacity style={styles.addButton} onPress={handleAddMultiInput}>
+                <Text style={styles.addButtonText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {multiTextValues.map((val, idx) => (
+              <View key={idx} style={styles.chip}>
+                <Text style={styles.chipText}>{val}</Text>
+              </View>
+            ))}
           </View>
         ) : (
           <View style={styles.optionsContainer}>
@@ -81,13 +135,19 @@ export default function AssessmentQuestion({
             ))}
           </View>
         )}
-      </View>
+      </ScrollView>
 
-      {isNumericInput && (
+      {(isNumericInput || isTextInput || isMultiTextInput) && (
         <View style={styles.bottomButtonContainer}>
           <TouchableOpacity
             style={styles.continueButton}
-            onPress={() => onNext(numericValue)}
+            onPress={() => onNext(
+              isMultiTextInput 
+                ? multiTextValues 
+                : isTextInput 
+                  ? textValue 
+                  : numericValue
+            )}
           >
             <Text style={styles.continueButtonText}>Next</Text>
           </TouchableOpacity>
@@ -98,12 +158,9 @@ export default function AssessmentQuestion({
         <View style={styles.tabIndicator}>
           <View style={styles.tabsContainer}>
             {Array.from({ length: totalSteps }).map((_, index) => (
-              <View 
-                key={index} 
-                style={[
-                  styles.tab, 
-                  index + 1 === currentStep ? styles.activeTab : {}
-                ]} 
+              <View
+                key={index}
+                style={[styles.tab, index + 1 === currentStep ? styles.activeTab : {}]}
               />
             ))}
           </View>
@@ -179,6 +236,34 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     fontFamily: 'Inter-Regular',
+  },
+  multiInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 15,
+  },
+  addButton: {
+    backgroundColor: "#FF7F27",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
+  chip: {
+    backgroundColor: "#333",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+  chipText: {
+    color: "#FFF",
+    fontSize: 14,
   },
   bottomButtonContainer: {
     padding: 20,
