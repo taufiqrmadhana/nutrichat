@@ -53,7 +53,7 @@ export default function FeedPage() {
         {posts.map((post, index) => (
           <View key={index} style={styles.postCard}>
             <View style={styles.userInfo}>
-              <Image source={require('@/assets/image2.png')} style={styles.avatar} />
+              <Image source={require('@/assets/cbrown.jpeg')} style={styles.avatar} />
               <View style={styles.userMeta}>
                 <Text style={styles.userName}>{post.user}</Text>
                 <Text style={styles.postTime}>{post.time}</Text>
