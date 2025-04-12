@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { sendMessageToAPI } from "@/utils/chat";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -13,8 +15,6 @@ import {
   TouchableWithoutFeedback
 } from "react-native";
 
-const GEMINI_API_KEY = "AIzaSyA8oA5wbNn2LsSTaY45deY17nEGxM_cCVc";
-
 type Message = {
   id: string;
   text: string;
@@ -27,22 +27,34 @@ export default function ChatRoom() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const flatListRef = useRef<FlatList>(null);
+  const { email, setEmail } = useAuth();
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow', 
-      () => setKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide', 
-      () => setKeyboardVisible(false)
-    );
+    setEmail("adliarindra27@gmail.com");
+
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+      setShowNavbar(false);
+    });
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+      setShowNavbar(true);
+    });
 
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
+
   }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const sendMessage = async () => {
     if (input.trim() === "" || loading) return;
@@ -57,45 +69,26 @@ export default function ChatRoom() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
-
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{
-                text: `Nama kamu adalah JoniBot. Kamu adalah asisten kesehatan ahli nutrisi di aplikasi NutriChat. 
-                Berikan jawaban singkat (maks 3 kalimat) dengan format jelas dan poin-poin menggunakan bullet points (•).
-                Fokus pada saran makanan sehat, pola makan, dan gaya hidup. Gunakan bahasa informal yang ramah.`,
-              }],
-            },
-            contents: [{ parts: [{ text: input }] }],
-          }),
-        }
-      );
-
-      const data = await response.json();
-      const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, aku sedang sibuk. Coba tanya lagi nanti ya!";
-
-      const botMessage: Message = { 
-        id: Date.now().toString() + "-bot", 
-        text: botReply, 
+    console.log(email);
+    if (email){
+      const response = await sendMessageToAPI(email, userMessage.text);
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response,
         sender: "bot",
         timestamp: Date.now()
       };
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [...prev, {
-        id: Date.now().toString() + "-error",
-        text: "Ups! JoniBot sedang gangguan, coba lagi ya...",
+      setLoading(false);
+    }
+    else{
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "JoniBot doesn't understand this, please try again",
         sender: "bot",
         timestamp: Date.now()
-      }]);
-    } finally {
+      };
+      setMessages((prev) => [...prev, botMessage]);
       setLoading(false);
     }
   };
@@ -106,72 +99,88 @@ export default function ChatRoom() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Nutrichat</Text>
-          <View style={styles.statusDot} />
-        </View>
+      <View style={styles.container}>
+        {showNavbar && (
+          <View style={styles.header}>
+            <Text style={styles.title}>Nutrichat</Text>
+            <View style={styles.statusDot} />
+          </View>
+        )}
 
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={[
-              styles.messageContainer, 
-              item.sender === "user" ? styles.userContainer : styles.botContainer
-            ]}>
-              {item.sender === "bot" && (
-                <Image source={require('@/assets/bot-avatar.png')} style={styles.avatar} />
-              )}
-              
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            style={{ flex: 1 }}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
               <View style={[
-                styles.bubble, 
-                item.sender === "user" ? styles.userBubble : styles.botBubble
+                styles.messageContainer, 
+                item.sender === "user" ? styles.userContainer : styles.botContainer
               ]}>
-                <Text style={styles.messageText}>{item.text}</Text>
-                <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                {item.sender === "bot" && (
+                  <Image source={require('@/assets/bot-avatar.png')} style={styles.avatar} />
+                )}
+                
+                <View style={[
+                  styles.bubble, 
+                  item.sender === "user" ? styles.userBubble : styles.botBubble
+                ]}>
+                  <Text style={styles.messageText}>{item.text}</Text>
+                  <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                </View>
+
+                {item.sender === "user" && (
+                  <Image source={require('@/assets/default-avatar.png')} style={styles.avatar} />
+                )}
               </View>
-
-              {item.sender === "user" && (
-                <Image source={require('@/assets/default-avatar.png')} style={styles.avatar} />
-              )}
-            </View>
-          )}
-          contentContainerStyle={[styles.chatContainer, { paddingBottom: keyboardVisible ? 20 : 80 }]}
-          keyboardDismissMode="on-drag"
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Image source={require('@/assets/comment-icon.png')} style={styles.emptyImage} />
-              <Text style={styles.emptyText}>Aku JoniBot, AI nutritionismu! Tanya apa saja tentang pola makan sehat 🥗</Text>
-            </View>
-          }
-        />
-
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="✍️ Tanya JoniBot..."
-            placeholderTextColor="#FFA500"
-            value={input}
-            onChangeText={setInput}
-            multiline
+            )}
+            contentContainerStyle={[styles.chatContainer, { paddingTop: showNavbar ? 120 : 60 }, { flexGrow: 1 }]}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Image source={require('@/assets/comment-icon.png')} style={styles.emptyImage} />
+                <Text style={styles.emptyText}>Ask me anything about healthy lifestyle! 🥗</Text>
+              </View>
+            }
+            ListFooterComponent={loading ? (
+              <View style={[styles.messageContainer, styles.botContainer]}>
+                <Image source={require('@/assets/bot-avatar.png')} style={styles.avatar} />
+                <View style={[styles.bubble, styles.botBubble]}>
+                  <Text style={styles.messageText}>🤔 I'm thinking</Text>
+                </View>
+              </View>
+            ) : null}
           />
-          
-          <TouchableOpacity 
-            style={[styles.sendButton, loading && styles.disabledButton]} 
-            onPress={sendMessage}
-            disabled={loading}
-          >
-            <Text style={styles.sendIcon}>
-              {loading ? '⏳' : '🚀'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="✍️ Ask JoniBot..."
+              placeholderTextColor="#FFA500"
+              value={input}
+              onChangeText={setInput}
+              multiline
+            />
+            
+            <TouchableOpacity 
+              style={[styles.sendButton, loading && styles.disabledButton]} 
+              onPress={sendMessage}
+              disabled={loading}
+            >
+              <Text style={styles.sendIcon}>
+                {loading ? '⏳' : '🚀'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -179,6 +188,11 @@ export default function ChatRoom() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0A0A0A" },
   header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFF",
@@ -207,7 +221,7 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   chatContainer: { 
-    padding: 16,
+    paddingHorizontal: 16,
     paddingBottom: 20
   },
   messageContainer: {

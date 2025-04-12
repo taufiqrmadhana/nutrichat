@@ -49,13 +49,12 @@ export default function Onboarding() {
 
   const handleReady = () => {
     try {
-      router.push("/(auth)/login");
+      router.push("/(tabs)/chat");
+      // router.push("/(auth)/login");
     } catch (error) {
       console.error("Navigation error:", error);
     }
   };
-  
-  
 
   return (
     <AuthProvider>

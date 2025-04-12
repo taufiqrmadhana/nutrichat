@@ -3,9 +3,11 @@ import React from 'react';
 import { View } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { AuthProvider } from '@/context/AuthContext';
 
 export default function TabLayout() {
   return (
+    <AuthProvider>
     <View style={{ backgroundColor: '#000', flex: 1 }}>
       <Tabs
         screenOptions={{
@@ -58,5 +60,6 @@ export default function TabLayout() {
         />
       </Tabs>
     </View>
+    </AuthProvider>
   );
 }
