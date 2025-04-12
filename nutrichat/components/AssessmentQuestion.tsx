@@ -22,9 +22,9 @@ interface AssessmentQuestionProps {
   isNumericInput?: boolean;
   numericValue?: string;
   setNumericValue?: (value: string) => void;
-  isTextInput?: boolean;  // Added for regular text input
-  textValue?: string;     // Added for regular text input
-  setTextValue?: (value: string) => void;  // Added for regular text input
+  isTextInput?: boolean;
+  textValue?: string;
+  setTextValue?: (value: string) => void;
   isMultiTextInput?: boolean;
   multiTextValues?: string[];
   setMultiTextValues?: (values: string[]) => void;
@@ -141,13 +141,15 @@ export default function AssessmentQuestion({
         <View style={styles.bottomButtonContainer}>
           <TouchableOpacity
             style={styles.continueButton}
-            onPress={() => onNext(
-              isMultiTextInput 
-                ? multiTextValues 
-                : isTextInput 
-                  ? textValue 
+            onPress={() =>
+              onNext(
+                isMultiTextInput
+                  ? multiTextValues
+                  : isTextInput
+                  ? textValue
                   : numericValue
-            )}
+              )
+            }
           >
             <Text style={styles.continueButtonText}>Next</Text>
           </TouchableOpacity>

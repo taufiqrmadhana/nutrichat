@@ -1,119 +1,138 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import AssessmentQuestion from "./AssessmentQuestion";
 import { assessmentQuestions } from "../data/questions";
 import { useAssessment } from "../context/AssessmentContext";
+import { useAuth } from "../context/AuthContext";
+import { initializeUser } from "../utils/auth";
+
+interface InitializationRequest {
+  email: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  gender: string;
+  country: string;
+  weight: number;
+  height: number;
+  food_allergies: string;
+  daily_exercises: string;
+  daily_activities: string;
+  medical_record: string;
+  weight_goal: number;
+  general_goal: string;
+}
 
 export default function AssessmentFlow() {
   const router = useRouter();
-  const { setAnswer } = useAssessment();
+  const { assessmentAnswers, setAnswer } = useAssessment();
+  const { email } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [numericInputValues, setNumericInputValues] = useState<Record<string, string>>({});
-  const [textInputValues, setTextInputValues] = useState<Record<string, string>>({});
-  const [multiInputValues, setMultiInputValues] = useState<Record<string, string[]>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const currentQuestion = assessmentQuestions[currentQuestionIndex];
 
+  const mapAnswersToRequest = (): InitializationRequest => ({
+    email: email || "",
+    first_name: assessmentAnswers["first_name"]?.toString() || "",
+    last_name: assessmentAnswers["last_name"]?.toString() || "",
+    date_of_birth: assessmentAnswers["date_of_birth"]?.toString() || "",
+    gender: assessmentAnswers["gender"]?.toString() || "",
+    country: assessmentAnswers["country"]?.toString() || "",
+    weight: parseFloat(assessmentAnswers["weight"]?.toString() || "0"),
+    height: parseFloat(assessmentAnswers["height"]?.toString() || "0"),
+    food_allergies: assessmentAnswers["food_allergies"]?.toString() || "",
+    daily_exercises: assessmentAnswers["daily_exercises"]?.toString() || "",
+    daily_activities: assessmentAnswers["daily_activities"]?.toString() || "",
+    medical_record: assessmentAnswers["medical_record"]?.toString() || "",
+    weight_goal: parseFloat(assessmentAnswers["weight_goal"]?.toString() || "0"),
+    general_goal: assessmentAnswers["general_goal"]?.toString() || "",
+  });
+
+  const handleSubmitAssessment = async () => {
+    try {
+      setLoading(true);
+      await initializeUser(mapAnswersToRequest());
+      router.push("/(tabs)");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Initialization failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAnswer = (value: string | number | string[]) => {
     if (!currentQuestion) return;
-    
-    let processedValue: any = value;
-    
-    // Ensure we're storing the right type of value based on question type
-    if ((currentQuestion.type === "numeric" || currentQuestion.type === "text") && typeof value === "string") {
-      processedValue = value.trim() === "" ? (currentQuestion.type === "numeric" ? "0" : "") : value;
-    } else if (currentQuestion.multiInput && Array.isArray(value)) {
-      processedValue = value.length > 0 ? value : [];
-    }
-
-    // Update answers in local state
-    const newAnswers = {
-      ...answers,
-      [currentQuestion.id]: processedValue,
-    };
-    setAnswers(newAnswers);
-    
-    // Update the global context
-    const stringValue = Array.isArray(processedValue) 
-      ? processedValue.join(", ") 
-      : processedValue.toString();
+    const stringValue = Array.isArray(value) ? value.join(", ") : value.toString();
     setAnswer(currentQuestion.id, stringValue);
-
-    // Move to next question or finish
     if (currentQuestionIndex < assessmentQuestions.length - 1) {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
     } else {
-      // Assessment completed
-      router.push("/(tabs)");
+      handleSubmitAssessment();
     }
   };
 
   const handleBack = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prevIndex => prevIndex - 1);
+      setCurrentQuestionIndex((prev) => prev - 1);
     }
-  };
-
-  const updateNumericValue = (value: string) => {
-    if (!currentQuestion) return;
-    setNumericInputValues(prev => ({
-      ...prev,
-      [currentQuestion.id]: value
-    }));
-  };
-
-  const updateTextValue = (value: string) => {
-    if (!currentQuestion) return;
-    setTextInputValues(prev => ({
-      ...prev,
-      [currentQuestion.id]: value
-    }));
-  };
-
-  const updateMultiTextValues = (values: string[]) => {
-    if (!currentQuestion) return;
-    setMultiInputValues(prev => ({
-      ...prev,
-      [currentQuestion.id]: values
-    }));
   };
 
   if (!currentQuestion) return null;
 
-  // Get the appropriate values based on the question type
-  const numericValue = numericInputValues[currentQuestion.id] || "";
-  const textValue = textInputValues[currentQuestion.id] || "";
-  const multiTextValues = multiInputValues[currentQuestion.id] || [];
-
-  // Determine input type
-  const isNumericInput = currentQuestion.type === "numeric";
-  const isTextInput = currentQuestion.type === "text" && !currentQuestion.multiInput;
-  const isMultiTextInput = currentQuestion.multiInput === true;
-
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <AssessmentQuestion
         title={currentQuestion.title}
         question={currentQuestion.question}
-        options={currentQuestion.type === "options" ? currentQuestion.options : []}
-        isNumericInput={isNumericInput}
-        numericValue={numericValue}
-        setNumericValue={updateNumericValue}
-        isTextInput={isTextInput}
-        textValue={textValue}
-        setTextValue={updateTextValue}
-        isMultiTextInput={isMultiTextInput}
-        multiTextValues={multiTextValues}
-        setMultiTextValues={updateMultiTextValues}
-        placeholder={currentQuestion.placeholder || "Enter value"}
+        options={currentQuestion.options}
+        isNumericInput={currentQuestion.type === "numeric"}
+        isTextInput={currentQuestion.type === "text"}
+        isMultiTextInput={currentQuestion.type === "multi_text"}
+        numericValue={currentQuestion.type === "numeric" ? assessmentAnswers[currentQuestion.id]?.toString() || "" : ""}
+        setNumericValue={
+          currentQuestion.type === "numeric"
+            ? (val) => setAnswer(currentQuestion.id, val)
+            : undefined
+        }
+        textValue={currentQuestion.type === "text" ? assessmentAnswers[currentQuestion.id]?.toString() || "" : ""}
+        setTextValue={
+          currentQuestion.type === "text"
+            ? (val) => setAnswer(currentQuestion.id, val)
+            : undefined
+        }
+        multiTextValues={
+          currentQuestion.type === "multi_text"
+            ? assessmentAnswers[currentQuestion.id]?.split(",").map((s: string) => s.trim()) || []
+            : []
+        }
+        setMultiTextValues={
+          currentQuestion.type === "multi_text"
+            ? (vals) => setAnswer(currentQuestion.id, vals.join(", "))
+            : undefined
+        }
+        placeholder={currentQuestion.placeholder}
+        showBottomTabs={true}
         onNext={handleAnswer}
         onBack={handleBack}
-        showBottomTabs={true}
         currentStep={currentQuestionIndex + 1}
         totalSteps={assessmentQuestions.length}
       />
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#121212",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginTop: 10,
+  },
+});
