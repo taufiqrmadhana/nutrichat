@@ -1,5 +1,17 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  FlatList, 
+  StyleSheet, 
+  Image, 
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
+} from "react-native";
 
 const GEMINI_API_KEY = "AIzaSyA8oA5wbNn2LsSTaY45deY17nEGxM_cCVc";
 
@@ -14,6 +26,23 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow', 
+      () => setKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide', 
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (input.trim() === "" || loading) return;
@@ -76,68 +105,74 @@ export default function ChatRoom() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        {/* <Image source={require('@/assets/logo.png')} style={styles.logo} /> */}
-        <Text style={styles.title}>Nutrichat</Text>
-        <View style={styles.statusDot} />
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Nutrichat</Text>
+          <View style={styles.statusDot} />
+        </View>
 
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={[
-            styles.messageContainer, 
-            item.sender === "user" ? styles.userContainer : styles.botContainer
-          ]}>
-            {item.sender === "bot" && (
-              <Image source={require('@/assets/bot-avatar.png')} style={styles.avatar} />
-            )}
-            
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <View style={[
-              styles.bubble, 
-              item.sender === "user" ? styles.userBubble : styles.botBubble
+              styles.messageContainer, 
+              item.sender === "user" ? styles.userContainer : styles.botContainer
             ]}>
-              <Text style={styles.messageText}>{item.text}</Text>
-              <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+              {item.sender === "bot" && (
+                <Image source={require('@/assets/bot-avatar.png')} style={styles.avatar} />
+              )}
+              
+              <View style={[
+                styles.bubble, 
+                item.sender === "user" ? styles.userBubble : styles.botBubble
+              ]}>
+                <Text style={styles.messageText}>{item.text}</Text>
+                <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+              </View>
+
+              {item.sender === "user" && (
+                <Image source={require('@/assets/default-avatar.png')} style={styles.avatar} />
+              )}
             </View>
-
-            {item.sender === "user" && (
-              <Image source={require('@/assets/default-avatar.png')} style={styles.avatar} />
-            )}
-          </View>
-        )}
-        contentContainerStyle={styles.chatContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Image source={require('@/assets/comment-icon.png')} style={styles.emptyImage} />
-            <Text style={styles.emptyText}>Aku JoniBot, AI nutritionismu! Tanya apa saja tentang pola makan sehat 🥗</Text>
-          </View>
-        }
-      />
-
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          placeholder="✍️ Tanya JoniBot..."
-          placeholderTextColor="#FFA500"
-          value={input}
-          onChangeText={setInput}
-          multiline
+          )}
+          contentContainerStyle={[styles.chatContainer, { paddingBottom: keyboardVisible ? 20 : 80 }]}
+          keyboardDismissMode="on-drag"
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Image source={require('@/assets/comment-icon.png')} style={styles.emptyImage} />
+              <Text style={styles.emptyText}>Aku JoniBot, AI nutritionismu! Tanya apa saja tentang pola makan sehat 🥗</Text>
+            </View>
+          }
         />
-        
-        <TouchableOpacity 
-          style={[styles.sendButton, loading && styles.disabledButton]} 
-          onPress={sendMessage}
-          disabled={loading}
-        >
-          <Text style={styles.sendIcon}>
-            {loading ? '⏳' : '🚀'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="✍️ Tanya JoniBot..."
+            placeholderTextColor="#FFA500"
+            value={input}
+            onChangeText={setInput}
+            multiline
+          />
+          
+          <TouchableOpacity 
+            style={[styles.sendButton, loading && styles.disabledButton]} 
+            onPress={sendMessage}
+            disabled={loading}
+          >
+            <Text style={styles.sendIcon}>
+              {loading ? '⏳' : '🚀'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -149,25 +184,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     padding: 16,
     paddingTop: 50,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
   },
-  logo: { width: 36, height: 36, borderRadius: 8 },
-  title: { color: "#FFA500", fontSize: 24, fontWeight: "bold" },
+  title: { 
+    flex: 1, 
+    color: "#FFA500",
+    fontSize: 24,
+    fontWeight: "800",
+    marginLeft: 12,
+  },
   statusDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
     backgroundColor: "#4CAF50",
-    marginRight: 8,
-    marginLeft:8
+    marginRight: 8
   },
-  chatContainer: { padding: 16 },
+  chatContainer: { 
+    padding: 16,
+    paddingBottom: 20
+  },
   messageContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -202,7 +244,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 15,
     lineHeight: 20,
-    fontFamily: "Inter_400Regular"
   },
   timeText: {
     color: "#FFFFFF88",
@@ -231,7 +272,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    paddingBottom: 24,
     backgroundColor: "#111",
     borderTopWidth: 1,
     borderColor: "#222"
