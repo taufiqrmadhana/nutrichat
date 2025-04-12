@@ -6,22 +6,50 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/context/AuthContext";
+import { loginUser } from "@/utils/auth";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-//   const { isAuthenticated, login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { setEmail: setAuthEmail } = useAuth();
   const router = useRouter();
 
-  const handleLogin = () => {
-    // login(username, password);
-    router.replace("/(preassessment)");
+  const validateForm = () => {
+    setError("");
+    if (!email || !password) {
+      setError("All fields are required");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Invalid email format");
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      await loginUser({ email, password });
+      setAuthEmail(email);
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      Alert.alert("Login Failed", err.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,17 +58,19 @@ export default function Login() {
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Sign in</Text>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               placeholderTextColor="#777777"
-              value={username}
-              onChangeText={setUsername}
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
+              keyboardType="email-address"
             />
           </View>
 
@@ -65,8 +95,14 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.disabledButton]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? "Processing..." : "Login"}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.googleButton}>
@@ -103,7 +139,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     textAlign: "center",
   },
   form: {
@@ -130,7 +166,7 @@ const styles = StyleSheet.create({
     top: 14,
   },
   loginButton: {
-    backgroundColor: "#FF7F27", // Orange color
+    backgroundColor: "#FF7F27",
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: "center",
@@ -144,14 +180,14 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     borderWidth: 1,
-    borderColor: "#FF7F27", // Orange color
+    borderColor: "#FF7F27",
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: "center",
     marginBottom: 24,
   },
   googleButtonText: {
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     fontSize: 16,
   },
   signupContainer: {
@@ -164,8 +200,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   signupLink: {
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  errorText: {
+    color: "#FF0000",
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 14,
+  },
+  disabledButton: {
+    backgroundColor: "#FF7F2777",
   },
 });

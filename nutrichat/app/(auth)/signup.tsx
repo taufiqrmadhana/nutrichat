@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { registerUser } from "@/utils/auth";
-// import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -22,13 +23,45 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//   const { signup } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
+  const { setEmail: setAuthEmail } = useAuth();
+
+  const validateForm = () => {
+    setError("");
+    if (!name || !email || !password || !confirmPassword) {
+      setError("All fields are required");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Invalid email format");
+      return false;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+    return true;
+  };
 
   const handleSignUp = async () => {
-    status = await registerUser({ email, password });
-    console.log(status);
-    // router.replace("/(preassessment)");
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    try {
+      await registerUser({ email, password });
+      setAuthEmail(email);
+      router.push("/(preassessment)");
+    } catch (err: any) {
+      Alert.alert("Registration Failed", err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,6 +71,7 @@ export default function SignUp() {
         <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Create your account</Text>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
 
           <View style={styles.form}>
@@ -106,10 +140,13 @@ export default function SignUp() {
             </View>
 
             <TouchableOpacity
-              style={styles.signupButton}
+              style={[styles.signupButton, loading && styles.disabledButton]}
               onPress={handleSignUp}
+              disabled={loading}
             >
-              <Text style={styles.signupButtonText}>Sign up</Text>
+              <Text style={styles.signupButtonText}>
+                {loading ? "Processing..." : "Sign up"}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.googleButton}>
@@ -151,7 +188,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     textAlign: "center",
   },
   form: {
@@ -178,7 +215,7 @@ const styles = StyleSheet.create({
     top: 14,
   },
   signupButton: {
-    backgroundColor: "#FF7F27", // Orange color
+    backgroundColor: "#FF7F27",
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: "center",
@@ -192,14 +229,14 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     borderWidth: 1,
-    borderColor: "#FF7F27", // Orange color
+    borderColor: "#FF7F27",
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: "center",
     marginBottom: 24,
   },
   googleButtonText: {
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     fontSize: 16,
   },
   loginContainer: {
@@ -213,8 +250,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   loginLink: {
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  errorText: {
+    color: "#FF0000",
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 14,
+  },
+  disabledButton: {
+    backgroundColor: "#FF7F2777",
   },
 });
