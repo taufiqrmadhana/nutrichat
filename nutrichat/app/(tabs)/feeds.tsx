@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   cameraIcon: {
-    width: 28,
-    height: 28,
+    width: 20,
+    height: 20,
     tintColor: "#FFA500",
   },
   contentContainer: {
