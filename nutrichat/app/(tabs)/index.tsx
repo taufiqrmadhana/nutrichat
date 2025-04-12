@@ -1,11 +1,46 @@
-import { useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Button } from "react-native";
+import { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Link } from "expo-router";
+import { fetchIntakeHistory } from "../../utils/userinfo"; // Fixed import path
+import { useAuth } from "../../context/AuthContext"; // Import useAuth hook
+
+// Define types for intake data
+interface Intake {
+  date: string;
+  protein: number;
+  carbohydrate: number;
+  fat: number;
+  foods: string[];
+}
 
 export default function HomePage() {
-  const [profileName] = useState("Timotius Vivaldi Gobo.");
+  const { email: authEmail } = useAuth(); // Get email from auth context
+  const [profileName] = useState("Timotius Vivaldi Gobo");
   const [profilePic] = useState(require("@/assets/image2.png"));
   const [showEvaluation, setShowEvaluation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [intakeHistory, setIntakeHistory] = useState<Intake[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authEmail) return; // Don't fetch if email is not available
+    
+    const loadIntakeHistory = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchIntakeHistory(authEmail);
+        setIntakeHistory(data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to load intake history");
+        Alert.alert("Error", "Failed to load your intake history.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadIntakeHistory();
+  }, [authEmail]);
 
   const breakfastData = [
     {
@@ -25,12 +60,20 @@ export default function HomePage() {
     }
   ];
 
-  const dailyStats = {
-    "Senin": { calories: 2450, target: 2000, protein: 82, carbs: 310, fat: 67, sugar: 45 },
-    "Selasa": { calories: 2180, target: 2000, protein: 78, carbs: 280, fat: 58, sugar: 38 },
-    "Rabu": { calories: 1950, target: 2000, protein: 85, carbs: 240, fat: 45, sugar: 28 },
-    "Kamis": { calories: 2320, target: 2000, protein: 91, carbs: 295, fat: 63, sugar: 51 },
-    "Jumat": { calories: 2075, target: 2000, protein: 88, carbs: 265, fat: 55, sugar: 43 }
+  // Format the date to readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    // Display the date as is from the API
+    return date.toLocaleDateString('id-ID', { 
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Calculate total calories based on macros
+  const calculateCalories = (protein: number, carbs: number, fat: number) => {
+    return Math.round((protein * 4) + (carbs * 4) + (fat * 9));
   };
 
   const ProgressBar = ({ value, max, color }: { value: number; max: number; color: string }) => (
@@ -64,7 +107,7 @@ export default function HomePage() {
 
         <View style={styles.streakContainer}>
           <Image source={require('@/assets/Vector(4).png')} style={styles.streakIcon} />
-          <Text style={styles.streakText}>Food logging streak of 5 days</Text>
+          <Text style={styles.streakText}>Food logging streak of {intakeHistory.length > 5 ? 5 : intakeHistory.length} days</Text>
         </View>
 
         <View style={styles.mealButtons}>
@@ -95,60 +138,115 @@ export default function HomePage() {
         {showEvaluation && (
           <View style={styles.evaluationContainer}>
             <Text style={styles.sectionHeader}>Daily Nutrition Evaluation</Text>
-            {Object.entries(dailyStats).map(([day, stats]) => (
-              <View key={day} style={styles.dayCard}>
-                <Text style={styles.dayHeader}>{day}</Text>
-                
-                <View style={styles.nutrientRow}>
-                  <Text style={styles.nutrientLabel}>Kalori</Text>
-                  <Text style={styles.nutrientValue}>{stats.calories}/{stats.target}kcal</Text>
-                  <ProgressBar 
-                    value={stats.calories} 
-                    max={stats.target} 
-                    color={stats.calories > stats.target ? "#FF6B6B" : "#4CAF50"}
-                  />
-                </View>
-                
-                <View style={styles.statsGrid}>
-                  <View style={styles.miniStat}>
-                    <Text style={styles.miniStatValue}>{stats.protein}g</Text>
-                    <Text style={styles.miniStatLabel}>Protein</Text>
-                    <ProgressBar 
-                      value={stats.protein} 
-                      max={90} 
-                      color={stats.protein >= 90 ? "#4CAF50" : "#FFA500"}
-                    />
-                  </View>
-                  <View style={styles.miniStat}>
-                    <Text style={styles.miniStatValue}>{stats.carbs}g</Text>
-                    <Text style={styles.miniStatLabel}>Karbo</Text>
-                    <ProgressBar 
-                      value={stats.carbs} 
-                      max={300} 
-                      color={stats.carbs >= 300 ? "#FF6B6B" : "#4CAF50"}
-                    />
-                  </View>
-                  <View style={styles.miniStat}>
-                    <Text style={styles.miniStatValue}>{stats.fat}g</Text>
-                    <Text style={styles.miniStatLabel}>Lemak</Text>
-                    <ProgressBar 
-                      value={stats.fat} 
-                      max={65} 
-                      color={stats.fat >= 65 ? "#FF6B6B" : "#4CAF50"}
-                    />
-                  </View>
-                  <View style={styles.miniStat}>
-                    <Text style={styles.miniStatValue}>{stats.sugar}g</Text>
-                    <Text style={styles.miniStatLabel}>Gula</Text>
-                    <ProgressBar 
-                      value={stats.sugar} 
-                      max={25} 
-                      color={stats.sugar >= 25 ? "#FF6B6B" : "#4CAF50"}
-                    />
-                  </View>
-                </View>
+            
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FFA500" />
+                <Text style={styles.loadingText}>Loading your intake history...</Text>
               </View>
-            ))}
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={() => {
+                    if (!authEmail) return;
+                    setIsLoading(true);
+                    fetchIntakeHistory(authEmail)
+                      .then((data: Intake[]) => {
+                        setIntakeHistory(data);
+                        setError(null);
+                      })
+                      .catch(() => setError("Failed to load intake history"))
+                      .finally(() => setIsLoading(false));
+                  }}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : intakeHistory.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No intake history found. Start logging your meals!</Text>
+              </View>
+            ) : (
+              intakeHistory.slice(0, 5).map((intake, index) => {
+                const totalCalories = calculateCalories(intake.protein, intake.carbohydrate, intake.fat);
+                const targetCalories = 2000; // This could come from user goals in a real app
+                
+                return (
+                  <View key={index} style={styles.dayCard}>
+                    <Text style={styles.dayHeader}>{formatDate(intake.date)}</Text>
+                    
+                    <View style={styles.nutrientRow}>
+                      <Text style={styles.nutrientLabel}>Kalori</Text>
+                      <Text style={styles.nutrientValue}>{totalCalories}/{targetCalories}kcal</Text>
+                      <ProgressBar 
+                        value={totalCalories} 
+                        max={targetCalories} 
+                        color={totalCalories > targetCalories ? "#FF6B6B" : "#4CAF50"}
+                      />
+                    </View>
+                    
+                    <View style={styles.statsGrid}>
+                      <View style={styles.miniStat}>
+                        <Text style={styles.miniStatValue}>{intake.protein}g</Text>
+                        <Text style={styles.miniStatLabel}>Protein</Text>
+                        <ProgressBar 
+                          value={intake.protein} 
+                          max={90} 
+                          color={intake.protein >= 90 ? "#4CAF50" : "#FFA500"}
+                        />
+                      </View>
+                      <View style={styles.miniStat}>
+                        <Text style={styles.miniStatValue}>{intake.carbohydrate}g</Text>
+                        <Text style={styles.miniStatLabel}>Karbo</Text>
+                        <ProgressBar 
+                          value={intake.carbohydrate} 
+                          max={300} 
+                          color={intake.carbohydrate >= 300 ? "#FF6B6B" : "#4CAF50"}
+                        />
+                      </View>
+                      <View style={styles.miniStat}>
+                        <Text style={styles.miniStatValue}>{intake.fat}g</Text>
+                        <Text style={styles.miniStatLabel}>Lemak</Text>
+                        <ProgressBar 
+                          value={intake.fat} 
+                          max={65} 
+                          color={intake.fat >= 65 ? "#FF6B6B" : "#4CAF50"}
+                        />
+                      </View>
+                      <View style={styles.miniStat}>
+                        <Text style={styles.miniStatValue}>{intake.foods.length}</Text>
+                        <Text style={styles.miniStatLabel}>Foods</Text>
+                        <ProgressBar 
+                          value={intake.foods.length} 
+                          max={15} 
+                          color={intake.foods.length >= 15 ? "#4CAF50" : "#FFA500"}
+                        />
+                      </View>
+                    </View>
+                    
+                    {intake.foods.length > 0 && (
+                      <View style={styles.foodsListContainer}>
+                        <Text style={styles.foodsListTitle}>Foods Consumed:</Text>
+                        <View style={styles.foodsList}>
+                          {intake.foods.slice(0, 3).map((food: string, foodIndex: number) => (
+                            <View key={foodIndex} style={styles.foodTag}>
+                              <Text style={styles.foodTagText}>{food}</Text>
+                            </View>
+                          ))}
+                          {intake.foods.length > 3 && (
+                            <View style={styles.foodTag}>
+                              <Text style={styles.foodTagText}>+{intake.foods.length - 3} more</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
 
@@ -185,7 +283,7 @@ export default function HomePage() {
         <View style={styles.dashboardCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Berat Badan</Text>
-            <Text style={styles.cardSubtitle}>Scat ini</Text>
+            <Text style={styles.cardSubtitle}>Saat ini</Text>
           </View>
           <Text style={styles.weightText}>90Kg</Text>
           <View style={styles.timelineContainer}>
@@ -320,6 +418,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
+    marginBottom: 20,
     alignItems: "center"
   },
   evalButtonText: {
@@ -531,5 +630,77 @@ const styles = StyleSheet.create({
     color: "#888",
     fontSize: 10,
     marginBottom: 4,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    color: "#888",
+    marginTop: 10,
+    fontSize: 14,
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#331111",
+    borderRadius: 8,
+  },
+  errorText: {
+    color: "#ff6b6b",
+    marginBottom: 10,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#FF6B6B",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#222",
+    borderRadius: 8,
+  },
+  emptyText: {
+    color: "#888",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  foodsListContainer: {
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: "#2a2a2a",
+    borderRadius: 8,
+  },
+  foodsListTitle: {
+    color: "#888",
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  foodsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  foodTag: {
+    backgroundColor: "#3a3a3a",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  foodTagText: {
+    color: "#FFA500",
+    fontSize: 10,
   },
 });
