@@ -1,15 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
-
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <View style={{ backgroundColor: '#000', flex: 1 }}>
       <Tabs
@@ -34,24 +29,24 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="ChatRoom"
-          options={{
-            title: 'Chat Room',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="arrow.uturn.down" color={color} />,
-          }}
-        />
-        <Tabs.Screen
           name="community"
           options={{
             title: 'Community',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.3.fill" color={color} />,
+            tabBarIcon: ({ color }) => <IconSymbol size={26} name="group" color={color} />,
           }}
         />
         <Tabs.Screen
-          name="tracker"
+          name="chat"
           options={{
-            title: 'Tracker',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="checklist" color={color} />,
+            title: 'Chat',
+            tabBarIcon: ({ color }) => <IconSymbol size={26} name="chat" color={color} />,
+          }}
+          />
+        <Tabs.Screen
+          name="feeds"
+          options={{
+            title: 'Feeds',
+            tabBarIcon: ({ color }) => <IconSymbol size={26} name="newspaper" color={color} />,
           }}
         />
         <Tabs.Screen

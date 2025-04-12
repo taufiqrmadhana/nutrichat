@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Button } from "react-native";
+import { Link } from "expo-router";
 
 export default function HomePage() {
   const [profileName] = useState("Timotius Vivaldi Gobo.");
   const [profilePic] = useState(require("@/assets/image2.png"));
+  const [showEvaluation, setShowEvaluation] = useState(false);
 
   const breakfastData = [
     {
@@ -22,6 +24,23 @@ export default function HomePage() {
       nutrients: { sod: 66, fat: 0.25, carbs: 6.21, prot: 4.31, cals: 45 }
     }
   ];
+
+  const dailyStats = {
+    "Senin": { calories: 2450, target: 2000, protein: 82, carbs: 310, fat: 67, sugar: 45 },
+    "Selasa": { calories: 2180, target: 2000, protein: 78, carbs: 280, fat: 58, sugar: 38 },
+    "Rabu": { calories: 1950, target: 2000, protein: 85, carbs: 240, fat: 45, sugar: 28 },
+    "Kamis": { calories: 2320, target: 2000, protein: 91, carbs: 295, fat: 63, sugar: 51 },
+    "Jumat": { calories: 2075, target: 2000, protein: 88, carbs: 265, fat: 55, sugar: 43 }
+  };
+
+  const ProgressBar = ({ value, max, color }: { value: number; max: number; color: string }) => (
+    <View style={styles.progressBarContainer}>
+      <View style={[styles.progressFill, { 
+        width: `${Math.min((value/max)*100, 100)}%`,
+        backgroundColor: color
+      }]}/>
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -63,7 +82,75 @@ export default function HomePage() {
               <Image source={require('@/assets/ic_baseline-plus.png')} style={styles.plusIcon} />
             </TouchableOpacity>
           ))}
+          <TouchableOpacity 
+            style={styles.evalButton}
+            onPress={() => setShowEvaluation(!showEvaluation)}
+          >
+            <Text style={styles.evalButtonText}>
+              {showEvaluation ? 'Hide' : 'Show'} Daily Evaluation
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {showEvaluation && (
+          <View style={styles.evaluationContainer}>
+            <Text style={styles.sectionHeader}>Daily Nutrition Evaluation</Text>
+            {Object.entries(dailyStats).map(([day, stats]) => (
+              <View key={day} style={styles.dayCard}>
+                <Text style={styles.dayHeader}>{day}</Text>
+                
+                <View style={styles.nutrientRow}>
+                  <Text style={styles.nutrientLabel}>Kalori</Text>
+                  <Text style={styles.nutrientValue}>{stats.calories}/{stats.target}kcal</Text>
+                  <ProgressBar 
+                    value={stats.calories} 
+                    max={stats.target} 
+                    color={stats.calories > stats.target ? "#FF6B6B" : "#4CAF50"}
+                  />
+                </View>
+                
+                <View style={styles.statsGrid}>
+                  <View style={styles.miniStat}>
+                    <Text style={styles.miniStatValue}>{stats.protein}g</Text>
+                    <Text style={styles.miniStatLabel}>Protein</Text>
+                    <ProgressBar 
+                      value={stats.protein} 
+                      max={90} 
+                      color={stats.protein >= 90 ? "#4CAF50" : "#FFA500"}
+                    />
+                  </View>
+                  <View style={styles.miniStat}>
+                    <Text style={styles.miniStatValue}>{stats.carbs}g</Text>
+                    <Text style={styles.miniStatLabel}>Karbo</Text>
+                    <ProgressBar 
+                      value={stats.carbs} 
+                      max={300} 
+                      color={stats.carbs >= 300 ? "#FF6B6B" : "#4CAF50"}
+                    />
+                  </View>
+                  <View style={styles.miniStat}>
+                    <Text style={styles.miniStatValue}>{stats.fat}g</Text>
+                    <Text style={styles.miniStatLabel}>Lemak</Text>
+                    <ProgressBar 
+                      value={stats.fat} 
+                      max={65} 
+                      color={stats.fat >= 65 ? "#FF6B6B" : "#4CAF50"}
+                    />
+                  </View>
+                  <View style={styles.miniStat}>
+                    <Text style={styles.miniStatValue}>{stats.sugar}g</Text>
+                    <Text style={styles.miniStatLabel}>Gula</Text>
+                    <ProgressBar 
+                      value={stats.sugar} 
+                      max={25} 
+                      color={stats.sugar >= 25 ? "#FF6B6B" : "#4CAF50"}
+                    />
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.mealSection}>
           <Text style={styles.sectionHeader}>Breakfast - 418 kcal</Text>
@@ -130,6 +217,11 @@ export default function HomePage() {
           </View>
         </View>
       </View>
+      <Link href="/(evaluation)/evaluation" style={styles.evalButton}>
+        <Text style={styles.evalButtonText}>
+          Weekly/Monthly Evaluation
+        </Text>
+      </Link>
     </ScrollView>
   );
 }
@@ -222,6 +314,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+  },
+  evalButton: {
+    backgroundColor: "#2a2a2a",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    alignItems: "center"
+  },
+  evalButtonText: {
+    color: "#FFA500",
+    fontSize: 16,
+    fontWeight: "600"
   },
   mealContent: {
     flexDirection: "row",
@@ -377,5 +481,55 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
+  },
+  evaluationContainer: {
+    marginVertical: 16,
+  },
+  dayCard: {
+    backgroundColor: "#1c1c1c",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  dayHeader: {
+    color: "#FFA500",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: "#333",
+    borderRadius: 3,
+    overflow: "hidden",
+    marginVertical: 4,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  miniStat: {
+    width: "48%",
+    marginBottom: 12,
+    padding: 8,
+    backgroundColor: "#2a2a2a",
+    borderRadius: 8,
+  },
+  miniStatValue: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  miniStatLabel: {
+    color: "#888",
+    fontSize: 10,
+    marginBottom: 4,
   },
 });

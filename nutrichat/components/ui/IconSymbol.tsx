@@ -13,6 +13,12 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  
+  // New mappings for tab navigation
+  'group': 'people',
+  'message': 'chat',
+  'newspaper': 'article',
+  'rosette': 'emoji-events',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],
