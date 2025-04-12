@@ -11,6 +11,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { AuthProvider } from "@/context/AuthContext";
 
 
 const { width } = Dimensions.get("window");
@@ -57,6 +58,7 @@ export default function Onboarding() {
   
 
   return (
+    <AuthProvider>
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <Animated.View
@@ -102,6 +104,7 @@ export default function Onboarding() {
         </View>
       </Animated.View>
     </SafeAreaView>
+    </AuthProvider>
   );
 }
 
