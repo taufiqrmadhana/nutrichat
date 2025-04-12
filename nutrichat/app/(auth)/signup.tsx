@@ -12,6 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import { Link, useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { registerUser } from "@/utils/auth";
 // import { useAuth } from "@/hooks/useAuth";
 
 export default function SignUp() {
@@ -24,9 +25,10 @@ export default function SignUp() {
 //   const { signup } = useAuth();
   const router = useRouter();
 
-  const handleSignUp = () => {
-    // signup(name, password, email);
-    router.replace("/(preassessment)");
+  const handleSignUp = async () => {
+    status = await registerUser({ email, password });
+    console.log(status);
+    // router.replace("/(preassessment)");
   };
 
   return (
