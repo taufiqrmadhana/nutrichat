@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Link } from "expo-router";
-import { fetchIntakeHistory } from "../../utils/userinfo"; // Fixed import path
+import { fetchHealthRecord, fetchIntakeHistory } from "../../utils/userinfo"; // Fixed import path
 import { useAuth } from "../../context/AuthContext"; // Import useAuth hook
+import { FadingTransition } from "react-native-reanimated";
 
 // Define types for intake data
 interface Intake {
@@ -15,12 +16,37 @@ interface Intake {
 
 export default function HomePage() {
   const { email: authEmail } = useAuth(); // Get email from auth context
-  const [profileName] = useState("Timotius Vivaldi Gobo");
+  const [profileName, setProfileName] = useState("Timotius Vivaldi Gobo");
   const [profilePic] = useState(require("@/assets/image2.png"));
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [intakeHistory, setIntakeHistory] = useState<Intake[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [weight, setWeight] = useState<number>(0);
+  const [carbohydrate, setCarbohydrate] = useState<number>(0);
+  const [fat, setFat] = useState<number>(0);
+  const [protein, setProtein] = useState<number>(0);
+  const [calories, setCalories] = useState<number>(0);
+
+
+  useEffect(() => {
+    const fetch = async() => {
+      if (authEmail){
+        const health_record = await fetchHealthRecord(authEmail);
+        const intake_history = await fetchIntakeHistory(authEmail);
+        const intake = intake_history[0];
+
+        setWeight(health_record.weight);
+        setCarbohydrate(intake.weight);
+        setFat(intake.fat);
+        setProtein(intake.protein);
+        setCalories(intake.weight + intake.fat + intake.protein);
+      }
+    }
+
+    setProfileName(authEmail as string);
+    fetch();
+  }, []);
 
   useEffect(() => {
     if (!authEmail) return; // Don't fetch if email is not available
@@ -40,7 +66,7 @@ export default function HomePage() {
     };
 
     loadIntakeHistory();
-  }, [authEmail]);
+  }, [authEmail, showEvaluation]);
 
   const breakfastData = [
     {
@@ -285,7 +311,7 @@ export default function HomePage() {
             <Text style={styles.cardTitle}>Berat Badan</Text>
             <Text style={styles.cardSubtitle}>Saat ini</Text>
           </View>
-          <Text style={styles.weightText}>90Kg</Text>
+          <Text style={styles.weightText}>{weight}</Text>
           <View style={styles.timelineContainer}>
             {['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'].map((month, index) => (
               <Text key={index} style={styles.monthText}>{month}</Text>
@@ -298,19 +324,19 @@ export default function HomePage() {
           <View style={styles.nutritionGrid}>
             <View style={styles.nutritionItem}>
               <Text style={styles.nutritionLabel}>Calories</Text>
-              <Text style={styles.nutritionValue}>1,950 kcal</Text>
+              <Text style={styles.nutritionValue}>{calories} kcal</Text>
             </View>
             <View style={styles.nutritionItem}>
               <Text style={styles.nutritionLabel}>Carbohydrates</Text>
-              <Text style={styles.nutritionValue}>133g</Text>
+              <Text style={styles.nutritionValue}>{carbohydrate}</Text>
             </View>
             <View style={styles.nutritionItem}>
               <Text style={styles.nutritionLabel}>Proteins</Text>
-              <Text style={styles.nutritionValue}>109.6g</Text>
+              <Text style={styles.nutritionValue}>{protein}</Text>
             </View>
             <View style={styles.nutritionItem}>
               <Text style={styles.nutritionLabel}>Fats</Text>
-              <Text style={styles.nutritionValue}>69.3g</Text>
+              <Text style={styles.nutritionValue}>{fat}</Text>
             </View>
           </View>
         </View>

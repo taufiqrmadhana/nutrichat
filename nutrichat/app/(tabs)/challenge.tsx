@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ChallengePage() {
-  const [profileName] = useState("Timotius Vivaldi G.");
+  const [profileName, setProfileName] = useState("Timotius Vivaldi G.");
   const [level] = useState(1);
   const [currentExp] = useState(200);
   const [maxExp] = useState(500);
+  const { email } = useAuth();
+
+  useEffect(() => { setProfileName(email as string); });
 
   return (
     <ScrollView style={styles.container}>

@@ -41,16 +41,16 @@ export default function AssessmentFlow() {
     date_of_birth: assessmentAnswers["date_of_birth"]?.toString() || "",
     gender: assessmentAnswers["gender"]?.toString() || "",
     country: assessmentAnswers["country"]?.toString() || "",
-    weight: parseFloat(assessmentAnswers["weight"]?.toString() || "0"),
+    weight: parseFloat(assessmentAnswers["currentWeight"]?.toString() || "0"),
     height: parseFloat(assessmentAnswers["height"]?.toString() || "0"),
-    food_allergies: assessmentAnswers["food_allergies"]?.toString() || "",
-    daily_exercises: assessmentAnswers["daily_exercises"]?.toString() || "",
-    daily_activities: assessmentAnswers["daily_activities"]?.toString() || "",
-    medical_record: assessmentAnswers["medical_record"]?.toString() || "",
-    weight_goal: parseFloat(assessmentAnswers["weight_goal"]?.toString() || "0"),
-    general_goal: assessmentAnswers["general_goal"]?.toString() || "",
+    food_allergies: assessmentAnswers["foodAllergies"]?.toString() || "",
+    daily_exercises: assessmentAnswers["dailyExercise"]?.toString() || "",
+    daily_activities: assessmentAnswers["activityLevel"]?.toString() || "",
+    medical_record: assessmentAnswers["medicalRecords"]?.toString() || "",
+    weight_goal: parseFloat(assessmentAnswers["targetWeight"]?.toString() || "0"),
+    general_goal: assessmentAnswers["Goals"]?.toString() || "",
   });
-
+  
   const handleSubmitAssessment = async () => {
     try {
       setLoading(true);
@@ -63,10 +63,11 @@ export default function AssessmentFlow() {
     }
   };
 
-  const handleAnswer = (value: string | number | string[]) => {
+  const handleAnswer = (value?: string | number | string[]) => {
     if (!currentQuestion) return;
-    const stringValue = Array.isArray(value) ? value.join(", ") : value.toString();
-    setAnswer(currentQuestion.id, stringValue);
+    const stringValue = Array.isArray(value) ? value.join(", ") : value?.toString();
+    if (stringValue)
+      setAnswer(currentQuestion.id, stringValue);
     if (currentQuestionIndex < assessmentQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {

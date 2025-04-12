@@ -1,11 +1,16 @@
 import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CommunityPage() {
   const router = useRouter();
   const [profileName, setProfileName] = useState("Timotius Vivaldi Gobo.");
   const [profilePic, setProfilePic] = useState(require("@/assets/image2.png"));
+  const { email } = useAuth();
+
+  useEffect(() => { setProfileName(email as string); });
+  
 
   return (
     <ScrollView style={styles.container}>

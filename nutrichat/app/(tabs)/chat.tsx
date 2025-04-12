@@ -29,11 +29,9 @@ export default function ChatRoom() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [showNavbar, setShowNavbar] = useState(true);
   const flatListRef = useRef<FlatList>(null);
-  const { email, setEmail } = useAuth();
+  const { email } = useAuth();
 
   useEffect(() => {
-    setEmail("adliarindra27@gmail.com");
-
     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
       setKeyboardVisible(true);
       setShowNavbar(false);

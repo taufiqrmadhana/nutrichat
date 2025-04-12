@@ -18,7 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function SignUp() {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail2] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -91,7 +91,7 @@ export default function SignUp() {
                 placeholder="Email"
                 placeholderTextColor="#777777"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={setEmail2}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />

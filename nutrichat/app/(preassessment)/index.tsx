@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import { View, StyleSheet, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import AssessmentFlow from '../../components/AssessmentFlow';
+import { useAuth } from '@/context/AuthContext';
 
 export default function IndexScreen() {
   const [fontsLoaded] = useFonts({

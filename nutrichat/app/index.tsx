@@ -11,8 +11,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { AuthProvider } from "@/context/AuthContext";
-
+import { useFocusEffect } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -41,6 +40,12 @@ export default function Onboarding() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(0);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      setCurrentPage(0);
+    }, [])
+  );
+
   const handleNext = () => {
     if (currentPage < onboardingData.length - 1) {
       setCurrentPage(currentPage + 1);
@@ -49,15 +54,13 @@ export default function Onboarding() {
 
   const handleReady = () => {
     try {
-      router.push("/(tabs)/chat");
-      // router.push("/(auth)/login");
+      router.push("/(auth)/login");
     } catch (error) {
       console.error("Navigation error:", error);
     }
   };
 
   return (
-    <AuthProvider>
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <Animated.View
@@ -94,16 +97,15 @@ export default function Onboarding() {
               <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
           ) : (
-              <TouchableOpacity style={styles.button} onPress={handleReady}>
-                <Text style={styles.buttonText}>Get Started</Text>
-              </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleReady}>
+              <Text style={styles.buttonText}>Get Started</Text>
+            </TouchableOpacity>
           )}
 
           <Text style={styles.brandText}>NutriChat</Text>
         </View>
       </Animated.View>
     </SafeAreaView>
-    </AuthProvider>
   );
 }
 
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   title: {
-    color: "#FF7F27", // Orange color from your design
+    color: "#FF7F27",
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 16,
@@ -158,11 +160,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: "#FF7F27", // Orange color
+    backgroundColor: "#FF7F27",
     width: 20,
   },
   button: {
-    backgroundColor: "#FF7F27", // Orange color
+    backgroundColor: "#FF7F27",
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: "center",
@@ -174,7 +176,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   brandText: {
-    color: "#FF7F27", // Orange color
+    color: "#FF7F27",
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",

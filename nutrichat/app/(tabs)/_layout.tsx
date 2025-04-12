@@ -1,13 +1,18 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { View, Image } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { AuthProvider } from '@/context/AuthContext';
+
+const TabIcon = ({ source, tintColor }: { source: any; tintColor: string }) => (
+  <Image
+    source={source}
+    style={{ width: 26, height: 26, tintColor }}
+    resizeMode="contain"
+  />
+);
 
 export default function TabLayout() {
   return (
-    <AuthProvider>
     <View style={{ backgroundColor: '#000', flex: 1 }}>
       <Tabs
         screenOptions={{
@@ -27,39 +32,48 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="house.fill" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <TabIcon source={require('@/assets/icons/home.png')} tintColor={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="community"
           options={{
             title: 'Community',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="group" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <TabIcon source={require('@/assets/icons/community.png')} tintColor={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="chat"
           options={{
             title: 'Chat',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="chat" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <TabIcon source={require('@/assets/icons/chat.png')} tintColor={color} />
+            ),
           }}
-          />
+        />
         <Tabs.Screen
           name="feeds"
           options={{
             title: 'Feeds',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="newspaper" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <TabIcon source={require('@/assets/icons/feeds.png')} tintColor={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="challenge"
           options={{
             title: 'Challenge',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="rosette" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <TabIcon source={require('@/assets/icons/challenge.png')} tintColor={color} />
+            ),
           }}
         />
       </Tabs>
     </View>
-    </AuthProvider>
   );
 }
